@@ -15,27 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NN.cpp">
+    <ClCompile Include="src\matrix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="matrix.cpp">
+    <ClCompile Include="examples\MNISTreader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MNISTreader.cpp">
+    <ClCompile Include="examples\test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="src\network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\xor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="matrix.h">
+    <ClInclude Include="src\matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MNISTreader.h">
+    <ClInclude Include="examples\MNISTreader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NN.h">
+    <ClInclude Include="src\network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="examples\examples.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -111,15 +111,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="matrix.cpp" />
-    <ClCompile Include="MNISTreader.cpp" />
-    <ClCompile Include="NN.cpp" />
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="examples\MNISTreader.cpp" />
+    <ClCompile Include="examples\test.cpp" />
+    <ClCompile Include="examples\xor.cpp" />
+    <ClCompile Include="src\matrix.cpp" />
+    <ClCompile Include="src\network.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="matrix.h" />
-    <ClInclude Include="MNISTreader.h" />
-    <ClInclude Include="NN.h" />
+    <ClInclude Include="examples\examples.h" />
+    <ClInclude Include="examples\MNISTreader.h" />
+    <ClInclude Include="src\matrix.h" />
+    <ClInclude Include="src\network.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
