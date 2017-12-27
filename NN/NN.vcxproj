@@ -112,10 +112,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="MNISTreader.cpp" />
     <ClCompile Include="NN.cpp" />
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="matrix.h" />
+    <ClInclude Include="MNISTreader.h" />
+    <ClInclude Include="NN.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
