@@ -200,5 +200,5 @@ void iris_example::run()
 	for (auto example : test_data)
 		if (net.get(example.first) == example.second)
 			++correct;
-	std::cout << correct << "/15 corect" << std::endl;
+	std::cout << correct << "/15 correct" << std::endl;
 }
