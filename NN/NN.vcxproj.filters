@@ -21,13 +21,16 @@
     <ClCompile Include="examples\MNISTreader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="examples\test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="examples\xor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\run.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\iris.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
