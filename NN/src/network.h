@@ -30,4 +30,5 @@ public:
 	void write() const;
 	const matrix &output(const matrix &input);
 	void learn(const matrix &input, const matrix &target);
+	size_t get(const matrix &input);
 };

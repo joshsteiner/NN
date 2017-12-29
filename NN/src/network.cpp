@@ -185,3 +185,14 @@ void network::learn(const matrix &input, const matrix &target)
 	backpropagate(target);
 	update_weights_biases();
 }
+
+
+rsize_t network::get(const matrix &input)
+{
+	matrix out = output(input);
+	size_t max_i = 0;
+	for (size_t i = 1; i < out.row_count(); ++i)
+		if (out.at(i,0) > out.at(max_i,0))
+			max_i = i;
+	return max_i;
+}
