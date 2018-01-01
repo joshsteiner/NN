@@ -177,7 +177,7 @@ std::vector<std::pair<matrix, Species>> data = {
 };
 
 
-void iris_example::run()
+void examples::iris::run()
 {
 	// shuffle data and split into training and test sets
 	std::random_shuffle(data.begin(), data.end());
@@ -188,7 +188,7 @@ void iris_example::run()
 
 	network net({4, 6, 3}, 0.2);
 
-	int epochs = 200;
+	int epochs = 2000;
 
 	std::cout << "learning..." << std::endl;
 	for (int i = 0; i < epochs; ++i)
