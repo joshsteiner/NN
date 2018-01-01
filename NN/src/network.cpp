@@ -5,13 +5,13 @@
 #include <cstdlib>
 
 
-inline double sigmoid(double z)
+static inline double sigmoid(double z)
 {
 	return 1 / (1 + exp(-z));
 }
 
 
-inline double sigmoid_prime(double z)
+static inline double sigmoid_prime(double z)
 {
 	return sigmoid(z) * (1 - sigmoid(z));
 }
@@ -31,8 +31,8 @@ network::network(std::vector<size_t> layers, double rate)
 
 	for (auto it = layers.begin()+1; it != layers.end(); ++it)
 	{
-		w.push_back(matrix(*it, *(it-1)));
-		b.push_back(matrix(*it, 1));
+		w.push_back(matrix(*it, *(it-1), true));
+		b.push_back(matrix(*it, 1, true));
 		z.push_back(matrix(*it, 1));
 		a.push_back(matrix(*it, 1));
 		d.push_back(matrix(*it, 1));
@@ -100,37 +100,22 @@ void network::save(const char *filename)
 	for (size_t L = 0; L < N; ++L)
 	{
 		fstrm
-			<< w[L].column_count() << " "         // input for layer
-			<< w[L].row_count() << std::endl;    // output for layer
+			<< w[L].ncol() << " "           // input for layer
+			<< w[L].nrow() << std::endl;    // output for layer
 											   									   
 		// weights
-		for (size_t i = 0; i < w[L].row_count(); ++i)
-			for (size_t j = 0; j < w[L].column_count(); ++j)
+		for (size_t i = 0; i < w[L].nrow(); ++i)
+			for (size_t j = 0; j < w[L].ncol(); ++j)
 				fstrm << w[L].at(i,j) << " ";
 		fstrm << std::endl;
 
 		// biases
-		for (size_t i = 0; i < w[L].row_count(); ++i)
+		for (size_t i = 0; i < w[L].nrow(); ++i)
 			fstrm << w[L].at(i,0) << " ";
 		fstrm << std::endl;
 	}
 
 	fstrm.close();
-}
-
-
-void network::write() const
-{
-	for (int i = 0; i < N; ++i)
-	{
-		std::cout << "Layer " << i+1 << std::endl;
-		std::cout << "weights ";
-		w[i].map(print);
-		std::cout << std::endl;
-		std::cout << "biases ";
-		b[i].map(print);
-		std::cout << std::endl;
-	}
 }
 
 
@@ -159,7 +144,7 @@ void network::feedforward(const matrix &input)
 void network::backpropagate(const matrix &target)
 {
 	// output layer error 
-	d[N-1] = (a[N-1] - target) .elem_mult (z[N-1].map(sigmoid_prime)); 
+	d[N-1] = (a[N-1] - target) .elem_mult (z[N-1].map(sigmoid_prime));
 
 	// other layers 
 	for (int L = N-2; L >= 0; --L)
@@ -174,7 +159,7 @@ void network::update_weights_biases()
 	for (size_t L = 1; L < N; ++L)
 	{
 		b[L] = b[L] - rate * d[L];
-		w[L] = w[L] - rate * d[L] * a[L-1].T();
+		w[L] = w[L] - rate * (d[L] * a[L-1].T());
 	}
 }
 
@@ -191,7 +176,7 @@ rsize_t network::get(const matrix &input)
 {
 	matrix out = output(input);
 	size_t max_i = 0;
-	for (size_t i = 1; i < out.row_count(); ++i)
+	for (size_t i = 1; i < out.nrow(); ++i)
 		if (out.at(i,0) > out.at(max_i,0))
 			max_i = i;
 	return max_i;

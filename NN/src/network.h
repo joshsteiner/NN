@@ -4,10 +4,6 @@
 #include "matrix.h"
 
 
-inline double sigmoid(double z);
-inline double sigmoid_prime(double z);
-
-
 class network
 {
 	size_t N;          // number of layers (excluding input)
@@ -26,8 +22,9 @@ class network
 public:
 	network(std::vector<size_t> layers, double rate);
 	network(const char *filename);
+	
 	void save(const char *filename);
-	void write() const;
+	
 	const matrix &output(const matrix &input);
 	void learn(const matrix &input, const matrix &target);
 	size_t get(const matrix &input);

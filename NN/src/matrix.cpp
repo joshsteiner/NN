@@ -5,25 +5,53 @@
 #include <random>
 
 
-const char* matrix_size_mismatch::what() const throw() 
+const char* matrix_size_mismatch::what() const throw()
 {
 	return "matrices are incompatible in size";
 }
 
 
-matrix::matrix() {}
-
-
-matrix::matrix(size_t m, size_t n)
+matrix::matrix() 
 {
-	for (int i = 0; i < m; ++i)
+	ncol_ = 0;
+	nrow_ = 0; 
+	data_ = nullptr;
+}
+
+
+matrix::matrix(const matrix &other)
+{
+	ncol_ = other.ncol();
+	nrow_ = other.nrow();
+	data_ = new double[nrow() * ncol()];
+
+	for (int i = 0; i < nrow() * ncol(); ++i)
+		data_[i] = other.data()[i];
+}
+
+
+matrix::matrix(matrix &&other)
+{
+	ncol_ = other.ncol();
+	nrow_ = other.nrow();
+	data_ = other.data();
+	other.data(nullptr);
+}
+
+
+matrix::matrix(size_t nrow, size_t ncol, bool rand_init)
+{
+	nrow_ = nrow; 
+	ncol_ = ncol; 
+	data_ = new double[ncol * nrow];
+
+	if (rand_init)
 	{
-		data.push_back(std::vector<double>{});
-		for (int j = 0; j < n; ++j)
+		for (int i = 0; i < ncol * nrow; ++i)
 		{
 			long double r = std::rand() / 10'000.0;
 			r -= std::floor(r);
-			data.back().push_back(r);
+			data_[i] = r;
 		}
 	}
 }
@@ -31,122 +59,169 @@ matrix::matrix(size_t m, size_t n)
 
 matrix::matrix(std::initializer_list<std::initializer_list<double>> init)
 {
+	nrow_ = init.size(); 
+	ncol_ = init.begin()->size(); 
+	data_ = new double[ncol() * nrow()];
+	
+	int it = 0;
 	for (auto row : init)
-	{
-		data.push_back(std::vector<double>{});
 		for (auto elem : row)
-			data.back().push_back(elem);
+			data_[it++] = elem;
+}
+
+
+matrix::~matrix()
+{
+	delete[] data_;
+}
+
+
+matrix &matrix::operator=(const matrix &other)
+{
+	matrix temp = matrix(other);
+	*this = std::move(temp);
+	return *this;
+}
+
+
+matrix &matrix::operator=(matrix &&other)
+{
+	if (this != &other)
+	{
+		delete[] data_;
+		data_ = other.data();
+		ncol_ = other.ncol();
+		nrow_ = other.nrow();
+		other.data(nullptr);
 	}
+	return *this;
 }
 
 
 inline double& matrix::at(size_t i, size_t j)
 {
-	return data[i][j];
+	return data()[i * ncol() + j];
 }
 
 
 inline double matrix::at(size_t i, size_t j) const
 {
-	return data[i][j];
+	return data()[i * ncol() + j];
 }
 
 
-inline size_t matrix::row_count() const
+inline const size_t matrix::ncol() const
 {
-	return data.size();
+	return ncol_;
 }
 
 
-inline size_t matrix::column_count() const 
+inline const size_t matrix::nrow() const
 {
-	return data[0].size();
+	return nrow_;
+}
+
+
+inline double const *matrix::data() const
+{
+	return data_;
+}
+
+
+inline double *matrix::data()
+{
+	return data_;
+}
+
+
+inline void matrix::data(double *ptr)
+{
+	data_ = ptr;
 }
 
 
 matrix matrix::T() const
 {
-	matrix transposed(column_count(), row_count());
+	matrix transposed(ncol(), nrow());
 
-	for (int i = 0; i < row_count(); ++i)
-		for (int j = 0; j < column_count(); ++j)
+	for (int i = 0; i < nrow(); ++i)
+		for (int j = 0; j < ncol(); ++j)
 			transposed.at(j,i) = this->at(i,j);
-			
+
 	return transposed;
 }
 
 
-matrix matrix::map(double(*f)(double)) const
+matrix matrix::map(std::function<double(double)> f) const
 {
-	matrix result(row_count(), column_count());
+	matrix result(nrow(), ncol());
 
-	for (int i = 0; i < row_count(); ++i)
-		for (int j = 0; j < column_count(); ++j)
+	for (int i = 0; i < nrow(); ++i)
+		for (int j = 0; j < ncol(); ++j)
 			result.at(i,j) = f(this->at(i,j));
 
 	return result;
 }
 
 
-matrix map2(double(*f)(double, double), const matrix &A, const matrix &B)
+static matrix map2(std::function<double(double, double)> f, const matrix &A, const matrix &B) 
 {
-	if (A.row_count() != B.row_count()
-		|| A.column_count() != B.column_count())
+	if (A.nrow() != B.nrow() || A.ncol() != B.ncol())
 		throw matrix_size_mismatch();
 
-	matrix result(A.row_count(), A.column_count());
+	matrix result(A.nrow(), A.ncol());
 
-	for (int i = 0; i < A.row_count(); ++i)
-		for (int j = 0; j < A.column_count(); ++j)
+	for (int i = 0; i < A.nrow(); ++i)
+		for (int j = 0; j < A.ncol(); ++j)
 			result.at(i,j) = f(A.at(i,j), B.at(i,j));
 
 	return result;
 }
 
 
-static inline double mult(double x, double y) { return x * y; }
 matrix matrix::elem_mult(const matrix &other) const
 {
-	return map2(mult, *this, other);
+	return map2([](double x, double y) { 
+		return x * y; 
+	}, *this, other);
 }
 
 
 matrix operator*(double x, const matrix &A)
 {
-	matrix result(A.row_count(), A.column_count());
-
-	for (int i = 0; i < A.row_count(); ++i)
-		for (int j = 0; j < A.column_count(); ++j)
-			result.at(i,j) = x * A.at(i,j);
-
-	return result;
+	return A.map([=](double y) {
+		return x * y;
+	});
 }
 
 
 matrix operator*(const matrix &A, const matrix &B)
 {
-	if (A.column_count() != B.row_count())
+	if (A.ncol() != B.nrow())
 		throw matrix_size_mismatch();
 
-	matrix result(A.row_count(), B.column_count());
+	matrix result(A.nrow(), B.ncol());
 
-	for (int i = 0; i < A.row_count(); ++i)
-		for (int j = 0; j < B.column_count(); ++j)
+	for (int i = 0; i < A.nrow(); ++i)
+	{
+		for (int j = 0; j < B.ncol(); ++j)
 		{
 			double dot_product = 0;
-			for (int k = 0; k < A.column_count(); ++k)
+			for (int k = 0; k < A.ncol(); ++k)
 				dot_product += A.at(i,k) * B.at(k,j);
 			result.at(i,j) = dot_product;
 		}
+	}
 
 	return result;
 }
 
 
-static inline double add(double x, double y) { return x + y; };
 matrix operator+(const matrix &A, const matrix &B)
 {
-	return map2(add, A, B);
+	return map2([](double x, double y) { 
+		return x + y; 
+	}, A, B);
 }
 
 
