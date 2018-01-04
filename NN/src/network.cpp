@@ -3,6 +3,7 @@
 #include <fstream>
 #include <ctime>
 #include <cstdlib>
+#include <algorithm>
 
 
 static inline double sigmoid(double z)
@@ -36,93 +37,8 @@ network::network(std::vector<size_t> layers, double rate)
 		z.push_back(matrix(*it, 1));
 		a.push_back(matrix(*it, 1));
 		d.push_back(matrix(*it, 1));
+		davg.push_back(matrix(*it, 1));
 	}
-}
-
-
-network::network(const char *filename)
-{
-	srand(time(0));
-
-	std::ifstream fstrm(filename);
-
-	rate = 0.2;
-
-	fstrm >> N;
-
-	size_t in, out;
-
-	// input layer
-	fstrm >> in >> out;
-	input = matrix(in,1);
-
-	for (size_t L = 0; L < N; ++L)
-	{
-		if (L != 0)
-			fstrm >> in >> out;
-
-		w.push_back(matrix(out, in));
-		b.push_back(matrix(out, 1));
-		z.push_back(matrix(out, 1));
-		a.push_back(matrix(out, 1));
-		d.push_back(matrix(out, 1));
-
-		// weights
-		for (size_t j = 0; j < out; ++j)
-		{
-			for (size_t k = 0; k < in; ++k)
-			{
-				double n;
-				fstrm >> n;
-				w[L].at(j,k) = n;
-			}
-		}
-
-		// biases
-		for (size_t j = 0; j < out; ++j)
-		{
-			double n;
-			fstrm >> n;
-			w[L].at(j,0) = n;
-		}
-	}
-
-	fstrm.close();
-}
-
-
-void network::save(const char *filename)
-{
-	std::ofstream fstrm(filename);
-
-	fstrm << N << std::endl;
-
-	for (size_t L = 0; L < N; ++L)
-	{
-		fstrm
-			<< w[L].ncol() << " "           // input for layer
-			<< w[L].nrow() << std::endl;    // output for layer
-											   									   
-		// weights
-		for (size_t i = 0; i < w[L].nrow(); ++i)
-			for (size_t j = 0; j < w[L].ncol(); ++j)
-				fstrm << w[L].at(i,j) << " ";
-		fstrm << std::endl;
-
-		// biases
-		for (size_t i = 0; i < w[L].nrow(); ++i)
-			fstrm << w[L].at(i,0) << " ";
-		fstrm << std::endl;
-	}
-
-	fstrm.close();
-}
-
-
-const matrix &network::output(const matrix &input)
-{
-	feedforward(input);
-	return a[N-1];
 }
 
 
@@ -141,43 +57,92 @@ void network::feedforward(const matrix &input)
 }
 
 
-void network::backpropagate(const matrix &target)
+void network::backpropagate(const matrix &target, int n)
 {
-	// output layer error 
-	d[N-1] = (a[N-1] - target) .elem_mult (z[N-1].map(sigmoid_prime));
+	double dn = n;
 
-	// other layers 
-	for (int L = N-2; L >= 0; --L)
+	// output layer error
+	d[N-1] = (a[N-1] - target) .elem_mult (z[N-1].map(sigmoid_prime));
+	davg[N-1] = (dn-1)/dn * davg[N-1] + 1/dn * d[N-1];
+
+	// other layers
+	for (int L = N - 2; L >= 0; --L)
+	{
 		d[L] = (w[L+1].T() * d[L+1]) .elem_mult (z[L].map(sigmoid_prime));
+		davg[L] = (dn-1)/n * davg[L] + 1/dn * d[L];
+	}
 }
 
 
 void network::update_weights_biases()
 {
-	b[0] = b[0] - rate * d[0];
-	w[0] = w[0] - rate * (d[0] * input.T());
+	b[0] = b[0] - rate * davg[0];
+	w[0] = w[0] - rate * (davg[0] * input.T());
 	for (size_t L = 1; L < N; ++L)
 	{
-		b[L] = b[L] - rate * d[L];
-		w[L] = w[L] - rate * (d[L] * a[L-1].T());
+		b[L] = b[L] - rate * davg[L];
+		w[L] = w[L] - rate * (davg[L] * a[L-1].T());
 	}
 }
 
 
-void network::learn(const matrix &input, const matrix &target)
+void network::fit(std::vector<matrix> &input, std::vector<matrix> &target, 
+	size_t batch_size, size_t epochs, bool shuffle)
 {
-	feedforward(input);
-	backpropagate(target);
-	update_weights_biases();
+	std::vector<std::pair<matrix, matrix>> zip(input.size());
+
+	for (int n = 0; n < epochs; ++n)
+	{
+		int i = 0, j = 0;
+		for (i = 0; i < input.size(); i += batch_size)
+		{
+			for (j = 0; j < batch_size && i+j < input.size(); ++j)
+			{
+				feedforward(input[i+j]);
+				backpropagate(target[i+j], j+1);
+			}
+			update_weights_biases();
+		}
+
+		if (shuffle)
+		{
+			for (int i = 0; i < input.size(); ++i)
+				zip[i] = { std::move(input[i]), std::move(target[i]) };
+
+			std::random_shuffle(zip.begin(), zip.end());
+
+			for (int i = 0; i < input.size(); ++i)
+			{
+				input[i] = std::move(zip[i].first);
+				target[i] = std::move(zip[i].second);
+			}
+		}
+	}
 }
 
 
-rsize_t network::get(const matrix &input)
+size_t network::get(const matrix &input)
 {
-	matrix out = output(input);
+	feedforward(input);
+
+	matrix out = a[N-1];
 	size_t max_i = 0;
+	
 	for (size_t i = 1; i < out.nrow(); ++i)
 		if (out.at(i,0) > out.at(max_i,0))
 			max_i = i;
+	
 	return max_i;
+}
+
+
+double network::evaluate(const std::vector<matrix> &input, std::vector<matrix> &target)
+{
+	int correct = 0, all = input.size();
+
+	for (int i = 0; i < input.size(); ++i)
+		if (target[i].at(this->get(input[i]), 0) == 1)
+			++correct;
+
+	return (double)correct/all;
 }

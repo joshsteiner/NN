@@ -3,16 +3,13 @@
 #include "../src/matrix.h"
 #include <algorithm>
 #include <vector>
-#include <tuple>
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
 
 
-matrix one_hot_true(size_t size, size_t true_one)
+matrix one_hot_true(size_t true_one)
 {
-	matrix result(size, 1);
-	for (unsigned i = 0; i < size; ++i)
+	matrix result(3, 1);
+	for (unsigned i = 0; i < 3; ++i)
 		result.at(i,0) = i == true_one;
 	return result;
 }
@@ -182,23 +179,38 @@ void examples::iris::run()
 	// shuffle data and split into training and test sets
 	std::random_shuffle(data.begin(), data.end());
 	std::vector<std::pair<matrix, Species>>
-		test_data(data.begin(), data.begin() + 15),
-		training_data(data.begin() + 15, data.end());
+		test_data(data.begin(), data.begin() + 10),
+		training_data(data.begin() + 10, data.end());
+
+	std::vector<matrix> 
+		training_input, training_target, 
+		test_input, test_target;
+
+	for (auto &elem : training_data)
+	{
+		training_input.push_back(std::move(elem.first));
+		training_target.push_back(one_hot_true(elem.second));
+	}
+
+	for (auto &elem : test_data)
+	{
+		test_input.push_back(std::move(elem.first));
+		test_target.push_back(one_hot_true(elem.second));
+	}
 
 
-	network net({4, 6, 3}, 0.2);
+	network net({ 4,6,3 }, 1);
 
-	int epochs = 2000;
-
-	std::cout << "learning..." << std::endl;
-	for (int i = 0; i < epochs; ++i)
-		for (auto example : training_data)
-			net.learn(example.first, one_hot_true(3, example.second));
+	std::cout << "fitting..." << std::endl;
+	net.fit(
+		training_input, 
+		training_target, 
+		1,               // batch size
+		1000,            // epochs
+		true             // shuffle
+	);
 
 	std::cout << "testing..." << std::endl;
-	int correct = 0;
-	for (auto example : test_data)
-		if (net.get(example.first) == example.second)
-			++correct;
-	std::cout << correct << "/15 correct" << std::endl;
+	printf("%.1f%% correct\n", 
+		100 * net.evaluate(test_input, test_target));
 }

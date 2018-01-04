@@ -43,14 +43,14 @@ matrix::matrix(size_t nrow, size_t ncol, bool rand_init)
 {
 	nrow_ = nrow; 
 	ncol_ = ncol; 
-	data_ = new double[ncol * nrow];
+	data_ = new double[ncol*nrow];
 
 	if (rand_init)
 	{
 		for (int i = 0; i < ncol * nrow; ++i)
 		{
-			long double r = std::rand() / 10'000.0;
-			r -= std::floor(r);
+			long double r = std::rand() - RAND_MAX / 2;
+			r /= 10'000;
 			data_[i] = r;
 		}
 	}
@@ -156,24 +156,23 @@ matrix matrix::map(std::function<double(double)> f) const
 {
 	matrix result(nrow(), ncol());
 
-	for (int i = 0; i < nrow(); ++i)
-		for (int j = 0; j < ncol(); ++j)
-			result.at(i,j) = f(this->at(i,j));
+	for (int i = 0; i < nrow() * ncol(); ++i)
+		result.data()[i] = f(data_[i]);
 
 	return result;
 }
 
 
-static matrix map2(std::function<double(double, double)> f, const matrix &A, const matrix &B) 
+static matrix map2(std::function<double(double, double)> f, 
+	const matrix &A, const matrix &B) 
 {
 	if (A.nrow() != B.nrow() || A.ncol() != B.ncol())
 		throw matrix_size_mismatch();
 
 	matrix result(A.nrow(), A.ncol());
 
-	for (int i = 0; i < A.nrow(); ++i)
-		for (int j = 0; j < A.ncol(); ++j)
-			result.at(i,j) = f(A.at(i,j), B.at(i,j));
+	for (int i = 0; i < A.nrow() * A.ncol(); ++i)
+		result.data()[i] = f(A.data()[i], B.data()[i]);
 
 	return result;
 }
