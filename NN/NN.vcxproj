@@ -69,13 +69,30 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuildAfterTargets>CopyFilesToOutputDirectory</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuildAfterTargets>CopyFilesToOutputDirectory</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <CustomBuildAfterTargets>CopyFilesToOutputDirectory</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <CustomBuildAfterTargets>CopyFilesToOutputDirectory</CustomBuildAfterTargets>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>copy $(ProjectDir)\examples\MNISTdata\* $(OutDir)</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>copying resources...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -85,6 +102,12 @@
       <OpenMPSupport>false</OpenMPSupport>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>copy $(ProjectDir)\examples\MNISTdata\* $(OutDir)</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>copying resources...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -98,6 +121,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>copy $(ProjectDir)\examples\MNISTdata\* $(OutDir)</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>copying resources...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -114,12 +143,19 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>copy $(ProjectDir)\examples\MNISTdata\* $(OutDir)</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>copying resources...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="examples\iris.cpp" />
     <ClCompile Include="examples\MNIST.cpp" />
     <ClCompile Include="examples\MNISTreader.cpp" />
     <ClCompile Include="examples\xor.cpp" />
+    <ClCompile Include="run.cpp" />
     <ClCompile Include="src\matrix.cpp" />
     <ClCompile Include="src\network.cpp" />
   </ItemGroup>
@@ -130,7 +166,9 @@
     <ClInclude Include="src\network.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="examples\MNISTdata\t10k-images.idx3-ubyte" />
+    <None Include="examples\MNISTdata\t10k-images.idx3-ubyte">
+      <FileType>Discomap</FileType>
+    </None>
     <None Include="examples\MNISTdata\t10k-labels.idx1-ubyte" />
     <None Include="examples\MNISTdata\train-images.idx3-ubyte" />
     <None Include="examples\MNISTdata\train-labels.idx1-ubyte" />
