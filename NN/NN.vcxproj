@@ -155,7 +155,6 @@
     <ClCompile Include="examples\MNIST.cpp" />
     <ClCompile Include="examples\MNISTreader.cpp" />
     <ClCompile Include="examples\xor.cpp" />
-    <ClCompile Include="run.cpp" />
     <ClCompile Include="src\matrix.cpp" />
     <ClCompile Include="src\network.cpp" />
   </ItemGroup>
